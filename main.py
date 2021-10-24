@@ -64,7 +64,7 @@ async def edit_product(item_id: int, edit_pr: EditProducts = Body(...)):  # 4 +
         if Products.exists(id=item_id):
             product = edit_pr.dict(exclude_unset=True, exclude_none=True)
 
-            if not Producer.exists(id=int(product.producer)):
+            if not Producer.exists(id=int(edit_pr.producer)):
                 return 'Производителя с таким id не существует'
 
             Products[item_id].set(**product)
@@ -154,8 +154,10 @@ async def get_average_products():  # 12
 
 
 @app.get('/api/producer/{item_id}/products -', tags=['products'])
-async def sorted_products():  # 13
-    pass
+async def sorted_products(item_id: int, min: int, max: int):  # 13
+    with db_session:
+        #  Producer[item_id].filter(lambda product: min < product.price < max)
+        pass
 
 
 if __name__ == "__main__":

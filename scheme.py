@@ -85,6 +85,7 @@ class EditProducer(BaseModel):
     country: Optional[str]
 
 
+
 class OutCoolForProducer(BaseModel):
     id: int
     name: str
