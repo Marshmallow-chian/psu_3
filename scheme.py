@@ -83,3 +83,8 @@ class NewProducer(BaseModel):
 class EditProducer(BaseModel):
     name: Optional[str]
     country: Optional[str]
+
+
+class OutCoolForProducer(BaseModel):
+    id: int
+    name: str
