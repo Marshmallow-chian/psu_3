@@ -3,7 +3,7 @@ from fastapi import FastAPI, Body
 import uvicorn
 from models import db, Producer, Products
 from pony.orm import db_session, commit
-from scheme import ProductsOut, ProducerOut, NewProducts, EditProducts, NewProducer, EditProducer
+from scheme import ProductsOut, ProducerOut, NewProducts, EditProducts, NewProducer, EditProducer, OutCoolForProducer
 # band_name = Artist.get(name="Kutless")
 app = FastAPI()
 my_db = 'Manufacturer_and_Products.sqlite'
@@ -47,6 +47,10 @@ async def new_product(n_product: NewProducts = Body(...)):  # 3 +
     with db_session:
         products = Products.select()[:]
         product = n_product.dict()
+
+        if not Producer.exists(id=int(n_product.producer)):
+            return 'Производителя с таким id не существует'
+
         if product not in products:
             Products(**product)
             commit()
@@ -59,6 +63,10 @@ async def edit_product(item_id: int, edit_pr: EditProducts = Body(...)):  # 4 +
     with db_session:
         if Products.exists(id=item_id):
             product = edit_pr.dict(exclude_unset=True, exclude_none=True)
+
+            if not Producer.exists(id=int(product.producer)):
+                return 'Производителя с таким id не существует'
+
             Products[item_id].set(**product)
             commit()
             return ProductsOut.from_orm(Products[item_id])
@@ -133,8 +141,11 @@ async def delete_producer(item_id: int):  # 10 +
 #  products = Product.select(lambda p: p.price > 100)
 #  https://docs.ponyorm.org/working_with_entity_instances.html
 @app.get('/api/producer/get_cool_producers', tags=['producers'])
-async def get_cool_producers():  # 11
+async def get_cool_producers(cool_level: int):  # 11
     pass
+    #  with db_session:
+    #    producer = Producer.select(lambda p: len(p.product) > cool_level)
+    #    return OutCoolForProducer.from_orm(producer)
 
 
 @app.get('/api/product/get_average_products', tags=['producers'])
