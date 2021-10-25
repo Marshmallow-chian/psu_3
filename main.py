@@ -45,17 +45,18 @@ async def get_product(item_id: int):  # 2 +
 @app.post('/api/product/new', tags=['products'])
 async def new_product(n_product: NewProducts = Body(...)):  # 3 +
     with db_session:
-        products = Products.select()[:]
+
         product = n_product.dict()
+
+        if Products.exists(id=int(n_product.id)):
+            return 'товар с таким id уже существует'
 
         if not Producer.exists(id=int(n_product.producer)):
             return 'Производителя с таким id не существует'
 
-        if product not in products:
-            Products(**product)
-            commit()
-            return n_product
-    return 'товар с таким id уже существует'
+        Products(**product)
+        commit()
+        return n_product
 
 
 @app.put('/api/product/edit/{item_id}', tags=['products'])
@@ -107,12 +108,14 @@ async def get_producer(item_id: int):  # 7 +
 @app.post('/api/producer/new', tags=['producers'])
 async def new_producer(n_producer: NewProducer = Body(...)):  # 8 +
     with db_session:
-        producers = Producer.select()[:]
-        producer = Producer(**n_producer.dict())
-        if producer not in producers:
-            commit()
-            return ProducerOut.from_orm(producer)
-    return 'производитель с таким id уже существует'
+        producer = n_producer.dict()
+
+        if Producer.exists(id=int(n_producer.id)):
+            return 'производитель с таким id уже существует'
+
+        Producer(**producer)
+        commit()
+        return ProducerOut.from_orm(producer)
 
 
 @app.put('/api/producer/edit/{item_id}', tags=['producers'])
