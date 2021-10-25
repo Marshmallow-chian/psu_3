@@ -48,8 +48,8 @@ async def new_product(n_product: NewProducts = Body(...)):  # 3 +
         products = Products.select()[:]
         product = n_product.dict()
 
-        if Producer.exists(id=int(n_product.producer)):
-            return 'Производителя с таким id уже существует'
+        if not Producer.exists(id=int(n_product.producer)):
+            return 'Производителя с таким id не существует'
 
         if product not in products:
             Products(**product)

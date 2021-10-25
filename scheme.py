@@ -85,6 +85,20 @@ class EditProducer(BaseModel):
     country: Optional[str]
 
 
+class SortedProductsForProducer(BaseModel):
+    products: list[ProductOutForProducer]
+
+    @validator('products', pre=True, allow_reuse=True)
+    def pony_set_to_list(cls, values):
+        new_values = list()  # Добавляет всю инфу о продуктах
+        for v in values:
+            if hasattr(v, "to_dict"):
+                new_values.append(v.to_dict())
+        return new_values
+
+    class Config:
+        orm_mode = True
+
 
 class OutCoolForProducer(BaseModel):
     id: int
