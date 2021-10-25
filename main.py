@@ -48,8 +48,8 @@ async def new_product(n_product: NewProducts = Body(...)):  # 3 +
         products = Products.select()[:]
         product = n_product.dict()
 
-        if not Producer.exists(id=int(n_product.producer)):
-            return 'Производителя с таким id не существует'
+        if Producer.exists(id=int(n_product.producer)):
+            return 'Производителя с таким id уже существует'
 
         if product not in products:
             Products(**product)
@@ -156,6 +156,7 @@ async def get_average_products():  # 12
 async def sorted_products(item_id: int, min: int, max: int):  # 13
     with db_session:
         producer = Producer[item_id].filter(lambda product: min < product.price < max)
+        #Product.select(lambda p: p.price > 100).order_by(desc(Products.price))
         return ProducerOut.from_orm(producer)
 
 
