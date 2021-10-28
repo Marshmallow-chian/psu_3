@@ -1,4 +1,5 @@
 from pony.orm import *
+from pydantic import BaseModel
 
 
 db = Database()
@@ -18,5 +19,11 @@ class Products(db.Entity):
     description = Optional(str)
     producer = Required(Producer)
 
+
+#class User(BaseModel):
+#    username: str
+#    email: Optional[str] = None
+#    full_name: Optional[str] = None
+#    disabled: Optional[bool] = None
 
 #db.generate_mapping()

@@ -98,8 +98,3 @@ class SortedProductsForProducer(BaseModel):
 
     class Config:
         orm_mode = True
-
-
-class OutCoolForProducer(BaseModel):
-    id: int
-    name: str

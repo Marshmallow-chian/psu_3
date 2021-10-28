@@ -1,13 +1,18 @@
 import os.path
-from fastapi import FastAPI, Body
+from fastapi import FastAPI, Body, Depends
+from fastapi.security import OAuth2PasswordBearer
 import uvicorn
-from models import db, Producer, Products
+from models import db, Producer, Products# , User
 from pony.orm import db_session, commit
-from scheme import ProductsOut, ProducerOut, NewProducts, EditProducts, NewProducer, EditProducer, OutCoolForProducer
-# band_name = Artist.get(name="Kutless")
+from scheme import ProductsOut, ProducerOut, NewProducts, EditProducts, NewProducer, EditProducer
+
 app = FastAPI()
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 my_db = 'Manufacturer_and_Products.sqlite'
 
+@app.get("/items/")
+async def read_items(token: str = Depends(oauth2_scheme)):
+    return {"token": token}
 
 @app.on_event("startup")
 async def start_app():
@@ -139,28 +144,43 @@ async def delete_producer(item_id: int):  # 10 +
         return "производителя с таким id не существует"
 
 
-#  Customer.select(lambda c: sum(c.orders.total_price) > 1000) pony orm
-#  products = Product.select(lambda p: p.price > 100)
-#  https://docs.ponyorm.org/working_with_entity_instances.html
 @app.get('/api/producer/get_cool_producers', tags=['producers'])
-async def get_cool_producers(cool_level: int):  # 11
-    pass
-    #  with db_session:
-    #    producer = Producer.select(lambda p: len(p.product) > cool_level)
-    #    return OutCoolForProducer.from_orm(producer)
+async def get_cool(cool_level: int):  # 11
+    with db_session:
+        print(cool_level)
+        Producer.select(lambda p: len(p.product) > cool_level).show()
+        pr = Producer.select(lambda p: len(p.product) > cool_level)
+        return Producer.from_orm(pr)
+
+
+@app.get('/api/producer/{item_id}', tags=['producers'])
+async def get_producer(item_id: int):  # 7 +
+    with db_session:
+        if Producer.exists(id=item_id):
+            producer = Producer.get(id=item_id)
+            return ProducerOut.from_orm(producer)
+        else:
+            return 'товара с таким id не существует'
 
 
 @app.get('/api/product/get_average_products', tags=['producers'])
-async def get_average_products():  # 12
-    pass
-
-
-@app.get('/api/producer/{item_id}/products -', tags=['products'])
-async def sorted_products(item_id: int, min: int, max: int):  # 13
+async def get_average(minn: int, maxx: int):  # 12
     with db_session:
-        producer = Producer[item_id].filter(lambda product: min < product.price < max)
-        #Product.select(lambda p: p.price > 100).order_by(desc(Products.price))
-        return ProducerOut.from_orm(producer)
+        products = Products.select()  # преобразуем запрос в SQL, а затем отправим в базу данных
+        all_products = []
+        for i in products:
+            all_products.append(ProductsOut.from_orm(i))
+    return all_products
+
+
+@app.get('/api/producer/{item_id}/products', tags=['producers'])
+async def sorted_products(item_id: int):  # 13 +
+    with db_session:
+        if Producer.exists(id=item_id):
+            producer = Producer.get(id=item_id)
+            pr = producer.products.select().order_by(Products.price)[::]
+            return ProducerOut(**(producer.to_dict() | {'products': pr}))
+        return 'Производителя с таким id не существует'
 
 
 if __name__ == "__main__":
