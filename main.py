@@ -153,16 +153,6 @@ async def get_cool(cool_level: int):  # 11
         return Producer.from_orm(pr)
 
 
-@app.get('/api/producer/{item_id}', tags=['producers'])
-async def get_producer(item_id: int):  # 7 +
-    with db_session:
-        if Producer.exists(id=item_id):
-            producer = Producer.get(id=item_id)
-            return ProducerOut.from_orm(producer)
-        else:
-            return 'товара с таким id не существует'
-
-
 @app.get('/api/product/get_average_products', tags=['producers'])
 async def get_average(minn: int, maxx: int):  # 12
     with db_session:
