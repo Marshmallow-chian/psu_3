@@ -71,6 +71,15 @@ class EditProducts(BaseModel):
     producer: Optional[int]
 
 
+class CoolLvL(BaseModel):
+    id: int
+    name: str
+    country: str
+
+    class Config:
+        orm_mode = True
+
+
 class NewProducer(BaseModel):
     id: int
     name: str

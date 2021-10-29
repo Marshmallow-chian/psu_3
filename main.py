@@ -4,15 +4,17 @@ from fastapi.security import OAuth2PasswordBearer
 import uvicorn
 from models import db, Producer, Products# , User
 from pony.orm import db_session, commit
-from scheme import ProductsOut, ProducerOut, NewProducts, EditProducts, NewProducer, EditProducer
+from scheme import ProductsOut, ProducerOut, NewProducts, EditProducts, NewProducer, EditProducer, CoolLvL
 
 app = FastAPI()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 my_db = 'Manufacturer_and_Products.sqlite'
 
+
 @app.get("/items/")
 async def read_items(token: str = Depends(oauth2_scheme)):
     return {"token": token}
+
 
 @app.on_event("startup")
 async def start_app():
@@ -35,6 +37,18 @@ async def get_all_products():  # 1 +
         for i in products:
             all_products.append(ProductsOut.from_orm(i))
     return all_products
+
+
+@app.get('/api/product/get_average_products', tags=['products'])
+async def get_average(minimum: int, maximum:int):  # 12-
+    with db_session:
+        products = Products.select(lambda p: minimum <= p.price and p.price <= maximum)[::]  # работает
+        all_products = []
+        for i in products:
+            all_products.append(ProductsOut.from_orm(i))
+        return all_products
+
+
 
 
 @app.get('/api/product/{item_id}', tags=['products'])
@@ -77,8 +91,6 @@ async def edit_product(item_id: int, edit_pr: EditProducts = Body(...)):  # 4 +
             return ProductsOut.from_orm(Products[item_id])
         return 'товара с таким id не существует'
 
-# https://pydantic-docs.helpmanual.io/usage/exporting_models/#modeldict
-
 
 @app.delete('/api/product/delete/{item_id}', tags=['products'])
 async def delete_product(item_id: int):  # 5 +
@@ -88,6 +100,18 @@ async def delete_product(item_id: int):  # 5 +
             commit()
             return "Объект удалён"
         return "производителя с таким id не существует"
+
+#----------------------------------------------------------------------------------------
+
+
+@app.get('/api/producer/get_cool_producers', tags=['producers'])
+async def get_cool(cool_level: int):  # 11
+    with db_session:
+        producer = Producer.select(lambda p: len(p.products) >= cool_level)[::]  # работает
+        all_producer = []
+        for i in producer:
+            all_producer.append(CoolLvL.from_orm(i))
+        return all_producer
 
 
 @app.get('/api/producers', tags=['producers'])
@@ -118,7 +142,7 @@ async def new_producer(n_producer: NewProducer = Body(...)):  # 8 +
         if Producer.exists(id=int(n_producer.id)):
             return 'производитель с таким id уже существует'
 
-        Producer(**producer)
+        producer = Producer(**producer)
         commit()
         return ProducerOut.from_orm(producer)
 
@@ -142,25 +166,6 @@ async def delete_producer(item_id: int):  # 10 +
             commit()
             return "Объект удалён"
         return "производителя с таким id не существует"
-
-
-@app.get('/api/producer/get_cool_producers', tags=['producers'])
-async def get_cool(cool_level: int):  # 11
-    with db_session:
-        print(cool_level)
-        Producer.select(lambda p: len(p.product) > cool_level).show()
-        pr = Producer.select(lambda p: len(p.product) > cool_level)
-        return Producer.from_orm(pr)
-
-
-@app.get('/api/product/get_average_products', tags=['producers'])
-async def get_average(minn: int, maxx: int):  # 12
-    with db_session:
-        products = Products.select()  # преобразуем запрос в SQL, а затем отправим в базу данных
-        all_products = []
-        for i in products:
-            all_products.append(ProductsOut.from_orm(i))
-    return all_products
 
 
 @app.get('/api/producer/{item_id}/products', tags=['producers'])
